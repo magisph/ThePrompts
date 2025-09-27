@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Biblioteca pessoal de prompts de IA - PWA completa para organizar e gerenciar seus prompts">
+    
+    <title>Biblioteca de Prompts IA</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Prompts IA">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1 class="app-title">
+                <span class="app-icon">🤖</span>
+                Biblioteca de Prompts IA
+            </h1>
+            
+            <div class="header-controls">
+                <button id="font-decrease" class="control-btn" title="Diminuir fonte" aria-label="Diminuir tamanho da fonte">
+                    <span class="icon">A-</span>
+                </button>
+                <button id="font-increase" class="control-btn" title="Aumentar fonte" aria-label="Aumentar tamanho da fonte">
+                    <span class="icon">A+</span>
+                </button>
+                <button id="theme-toggle" class="control-btn" title="Alternar tema" aria-label="Alternar entre tema claro e escuro">
+                    <span class="icon theme-icon">🌙</span>
+                </button>
+                <button id="new-prompt-btn" class="primary-btn" aria-label="Criar novo prompt">
+                    <span class="icon">+</span>
+                    Novo Prompt
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <div class="search-section">
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-input" placeholder="Buscar prompts..." aria-label="Buscar prompts">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <div class="sort-section">
+                    <label for="sort-select" class="sort-label">Ordenar por:</label>
+                    <select id="sort-select" class="sort-select" aria-label="Opções de ordenação">
+                        <option value="dataModificacao">Data de Modificação</option>
+                        <option value="titulo">Título</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <label class="filter-item">
+                        <input type="checkbox" id="favorites-filter" class="filter-checkbox">
+                        <span class="filter-label">
+                            <span class="icon">⭐</span>
+                            Apenas Favoritos
+                        </span>
+                    </label>
+                </div>
+
+                <div class="section">
+                    <h3 class="section-title">
+                        <span class="icon">🏷️</span>
+                        Tags
+                    </h3>
+                    <div id="tags-list" class="tags-list" role="list">
+                        </div>
+                    <button id="new-tag-btn" class="add-btn" aria-label="Criar nova tag">
+                        <span class="icon">+</span>
+                        Nova Tag
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="content-area">
+            <div class="prompts-container">
+                <div class="prompts-header">
+                    <h2 id="prompts-title" class="prompts-title">Todos os Prompts</h2>
+                    <span id="prompts-count" class="prompts-count">0 prompts</span>
+                </div>
+                
+                <div id="prompts-list" class="prompts-list" role="list">
+                    </div>
+                
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-icon">📝</div>
+                    <h3>Nenhum prompt encontrado</h3>
+                    <p>Comece criando seu primeiro prompt ou ajuste os filtros de busca.</p>
+                    <button id="create-first-prompt-btn" class="primary-btn">
+                        Criar Primeiro Prompt
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="prompt-modal" class="modal" role="dialog" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title" class="modal-title">Novo Prompt</h2>
+                <button id="close-prompt-modal-btn" class="close-btn" aria-label="Fechar modal">×</button>
+            </div>
+            
+            <form id="prompt-form" class="modal-body">
+                <div class="form-group">
+                    <label for="prompt-title" class="form-label">Título *</label>
+                    <input type="text" id="prompt-title" class="form-input" required aria-describedby="title-help">
+                    <small id="title-help" class="form-help">Digite um título descritivo para o prompt</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt-content" class="form-label">Conteúdo *</label>
+                    <textarea id="prompt-content" class="form-textarea" rows="8" required aria-describedby="content-help"></textarea>
+                    <small id="content-help" class="form-help">Digite o conteúdo completo do prompt</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="prompt-favorite" class="form-checkbox">
+                        Marcar como favorito
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt-tags" class="form-label">Tags</label>
+                    <div class="tags-input-container">
+                        <input type="text" id="prompt-tags" class="form-input" placeholder="Digite para buscar ou criar tags..." autocomplete="off">
+                        <div id="tags-autocomplete" class="tags-autocomplete" style="display: none;"></div>
+                        <div id="selected-tags" class="selected-tags"></div>
+                    </div>
+                    <small class="form-help">Pressione Enter ou vírgula para adicionar uma tag.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-prompt-btn" class="secondary-btn">Cancelar</button>
+                    <button type="submit" id="save-prompt-btn" class="primary-btn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="tag-modal" class="modal" role="dialog" aria-labelledby="tag-modal-title" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="tag-modal-title" class="modal-title">Nova Tag</h2>
+                <button id="close-tag-modal-btn" class="close-btn" aria-label="Fechar modal">×</button>
+            </div>
+            
+            <form id="tag-form" class="modal-body">
+                <div class="form-group">
+                    <label for="tag-name" class="form-label">Nome da Tag *</label>
+                    <input type="text" id="tag-name" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tag-color" class="form-label">Cor da Tag</label>
+                    <div class="color-picker-container">
+                        <input type="color" id="tag-color" class="color-picker" value="#2563eb">
+                        <div class="color-presets">
+                            <button type="button" class="color-preset" data-color="#2563eb" style="background-color: #2563eb"></button>
+                            <button type="button" class="color-preset" data-color="#dc2626" style="background-color: #dc2626"></button>
+                            <button type="button" class="color-preset" data-color="#16a34a" style="background-color: #16a34a"></button>
+                            <button type="button" class="color-preset" data-color="#ca8a04" style="background-color: #ca8a04"></button>
+                            <button type="button" class="color-preset" data-color="#9333ea" style="background-color: #9333ea"></button>
+                            <button type="button" class="color-preset" data-color="#c2410c" style="background-color: #c2410c"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancel-tag-btn" class="secondary-btn">Cancelar</button>
+                    <button type="submit" class="primary-btn">Criar Tag</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Abrir menu lateral">
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+        <span class="hamburger"></span>
+    </button>
+
+    <div id="overlay" class="overlay"></div>
+
+    <script src="script.js"></script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
